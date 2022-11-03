@@ -6,25 +6,30 @@ var velocity = Vector2.ZERO
 var jump_power = Vector2.ZERO
 var direction = 1
 
+var out_of_bounds = 600
+
 export var gravity = Vector2(0,30)
 
 export var move_speed = 20
 export var max_move = 300
 
 export var jump_speed = 200
-export var max_jump = 1200
+export var max_jump = 1050
 
 export var leap_speed = 200
-export var max_leap = 1200
+export var max_leap = 1050
 
 var moving = false
 var is_jumping = false
 var double_jumped = false
 var should_direction_flip = true # wether or not player controls (left/right) can flip the player sprite
+var moving_platform = null
 
 
 func _physics_process(_delta):
 	velocity.x = clamp(velocity.x,-max_move,max_move)
+	if position.y > out_of_bounds:
+		die()
 		
 	if should_direction_flip:
 		if direction < 0 and not $AnimatedSprite.flip_h: $AnimatedSprite.flip_h = true
@@ -54,9 +59,13 @@ func set_animation(anim):
 	else: $AnimatedSprite.play()
 
 func is_on_floor():
+	moving_platform = null
 	var fl = $Floor.get_children()
 	for f in fl:
 		if f.is_colliding():
+			var c = f.get_collider()
+			if c.get_parent().name == "Platform_Container":
+				moving_platform = c
 			return true
 	return false
 
@@ -80,7 +89,7 @@ func set_wall_raycasts(is_enabled):
 	$Wall/Left.enabled = is_enabled
 	$Wall/Right.enabled = is_enabled
 
-func do_damage(d):
+func do_damage(damage):
 	queue_free()
 
 func die():
